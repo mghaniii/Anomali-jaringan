@@ -18,5 +18,40 @@ const io = socketIO(server, {
 let logs = [];
 
 
-io.on("connection", (socket) => {
-  console.log("Client terhubung:", socket.id);
+
+
+function cekAnomali() {
+  // butuh minimal 20 data untuk hitung statistik yang lumayan stabil
+  if (logs.length < 20) return;
+
+  const rates = logs.map((l) => l.packetRate);
+
+  const mean = ss.mean(rates);
+  const std = ss.standardDeviation(rates);
+
+  
+  if (std === 0) return;
+
+  const terbaru = logs[logs.length - 1];
+  const z = (terbaru.packetRate - mean) / std;
+
+  
+  if (Math.abs(z) > 3) {
+    console.log("⚠️ ANOMALI TERDETEKSI");
+    console.log("   nodeId    :", terbaru.nodeId);
+    console.log("   packetRate:", terbaru.packetRate);
+    console.log("   mean      :", mean.toFixed(2));
+    console.log("   std       :", std.toFixed(2));
+    console.log("   z-score   :", z.toFixed(2));
+
+   
+    io.emit("anomaly", {
+      nodeId: terbaru.nodeId,
+      packetRate: terbaru.packetRate,
+      mean,
+      std,
+      z,
+      timestamp: terbaru.timestamp,
+    });
+  }
+}
