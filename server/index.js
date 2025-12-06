@@ -17,7 +17,22 @@ const io = socketIO(server, {
 
 let logs = [];
 
+io.on("connection", (socket) => {
+  console.log("Client terhubung:", socket.id);
 
+ 
+  socket.on("log", (data) => {
+   
+
+    logs.push(data);
+
+   
+    io.emit("log-broadcast", data);
+
+   
+    cekAnomali();
+  });
+});
 
 
 function cekAnomali() {
@@ -29,7 +44,7 @@ function cekAnomali() {
   const mean = ss.mean(rates);
   const std = ss.standardDeviation(rates);
 
-  
+
   if (std === 0) return;
 
   const terbaru = logs[logs.length - 1];
@@ -44,7 +59,7 @@ function cekAnomali() {
     console.log("   std       :", std.toFixed(2));
     console.log("   z-score   :", z.toFixed(2));
 
-   
+
     io.emit("anomaly", {
       nodeId: terbaru.nodeId,
       packetRate: terbaru.packetRate,
