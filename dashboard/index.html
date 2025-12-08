@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DIDAS Dashboard</title>
+</head>
+<style>
+body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background: #f2f2f2;
+    }
+    h1 {
+      margin-bottom: 10px;
+    }
+    #container {
+      display: flex;
+      gap: 20px;
+    }
+    #left {
+      flex: 2;
+    }
+    #right {
+      flex: 1;
+      background: #fff;
+      padding: 10px;
+      border-radius: 8px;
+      max-height: 400px;
+      overflow-y: auto;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+    }
+    .anomaly-item {
+      border-bottom: 1px solid #ddd;
+      padding: 5px 0;
+      font-size: 14px;
+    }
+
+
+</style>
+<body>
+    <section>
+        <h1>DIDAS - Dashboard Trafik Jaringan</h1>
+         <p>Grafik di bawah menampilkan <b>packetRate</b> real-time dari node-agent. Jika terdeteksi anomali, akan muncul di panel kanan.</p>
+         <div id="container">
+    <div id="left">
+      <canvas id="trafficChart" width="600" height="300"></canvas>
+    </div>
+    <div id="right">
+      <h3>Daftar Anomali</h3>
+      <div id="anomalyList"></div>
+    </div>
+  </div>
+    </section>
+</body>
+</html>
