@@ -59,5 +59,48 @@ body {
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <!-- Socket.IO client dari server kita -->
   <script src="http://localhost:3000/socket.io/socket.io.js"></script>
+
+  <script>
+    const socket =io("http://localhost:3000");
+
+
+    const ctx = document.getElementById("trafficChart").getContext('2d');
+     const labels = [];      // label sumbu-X (waktu)
+    const dataPoints = []; 
+
+
+    const trafficChart = new Chart(ctx, {
+      type: "line",
+      data: {
+        labels: labels,
+        datasets: [{
+          label: "Packet Rate",
+          data: dataPoints,
+          borderWidth: 1,
+          fill: false,
+        }]
+      },
+      options: {
+        responsive: true,
+        animation: false,
+        scales: {
+          x: {
+            title: {
+              display: true,
+              text: "Waktu"
+            }
+          },
+          y: {
+            title: {
+              display: true,
+              text: "Packet Rate"
+            },
+            beginAtZero: true
+          }
+        }
+      }
+    });
+
+  </script>
 </body>
 </html>
