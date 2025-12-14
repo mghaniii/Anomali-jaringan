@@ -102,6 +102,23 @@ body {
       }
     });
 
+
+    socket.on("log-broadcast", (data) => {
+      // data: { nodeId, packetRate, timestamp }
+
+      const timeLabel = new Date(data.timestamp).toLocaleTimeString();
+
+      labels.push(timeLabel);
+      dataPoints.push(data.packetRate);
+
+      // batasi jumlah titik agar grafik tidak terlalu penuh
+      if (labels.length > 50) {
+        labels.shift();
+        dataPoints.shift();
+      }
+
+      trafficChart.update();
+    });
   </script>
 </body>
 </html>
