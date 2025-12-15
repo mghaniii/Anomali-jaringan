@@ -119,6 +119,26 @@ body {
 
       trafficChart.update();
     });
+
+  socket.on("anomaly", (info) => {
+  const list = document.getElementById("anomalyList");
+  const item = document.createElement("div");
+  item.className = "anomaly-item";
+
+  const timeLabel = new Date(info.timestamp).toLocaleTimeString();
+
+  item.innerHTML = `
+    <b>Waktu:</b> ${timeLabel}<br>
+    <b>Node:</b> ${info.nodeId}<br>
+    <b>PacketRate:</b> ${info.packetRate}<br>
+    <b>Mean:</b> ${info.mean.toFixed(2)}, <b>STD:</b> ${info.std.toFixed(2)}<br>
+    <b>Z-score:</b> ${info.z.toFixed(2)}
+  `;
+
+  list.prepend(item);
+});
+
+
   </script>
 </body>
 </html>
