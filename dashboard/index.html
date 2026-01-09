@@ -5,42 +5,200 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DIDAS Dashboard</title>
 </head>
+
 <style>
-body {
-      font-family: Arial, sans-serif;
-      padding: 20px;
-      background: #151414ff;
-    }
-    h1, p {
-      margin-bottom: 10px;
-      align-items: center;
-      color: #58ff0b;
-    }
-    #container {
-      display: flex;
-      gap: 20px;
-    }
-    #left {
-      flex: 2;
-    }
-    #right {
-      flex: 1;
-      background: #fff;
-      padding: 10px;
-      border: solid 4px #58ff0b;
-      border-radius: 8px;
-      max-height: 400px;
-      overflow-y: auto;
-      box-shadow: 0 0 5px rgba(0,0,0,0.1);
-    }
-    .anomaly-item {
-      border-bottom: 1px solid #ddd;
-      padding: 5px 0;
-      font-size: 14px;
-    }
+        :root {
+            --primary-color: #58ff0b;
+            --primary-dim: rgba(88, 255, 11, 0.1);
+            --bg-color: #0b0c10;
+            --card-bg: #1f2833;
+            --text-light: #e0e0e0;
+            --text-muted: #a0a0a0;
+            --danger-color: #ff4b4b;
+        }
 
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
 
-</style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(88, 255, 11, 0.05) 0%, transparent 20%),
+                radial-gradient(circle at 90% 80%, rgba(88, 255, 11, 0.05) 0%, transparent 20%);
+            color: var(--text-light);
+            padding: 40px;
+            min-height: 100vh;
+        }
+
+        section {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* Header Styling */
+        h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: var(--text-light);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            letter-spacing: -0.5px;
+        }
+
+        h1::before {
+            content: '';
+            display: block;
+            width: 12px;
+            height: 12px;
+            background-color: var(--primary-color);
+            border-radius: 50%;
+            box-shadow: 0 0 15px var(--primary-color);
+            animation: pulse 2s infinite;
+        }
+
+        p {
+            color: var(--text-muted);
+            margin-bottom: 30px;
+            font-size: 0.95rem;
+            max-width: 600px;
+        }
+
+        b {
+            color: var(--primary-color);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* Main Grid Container */
+        #container {
+            display: grid;
+            grid-template-columns: 3fr 1fr; /* 3 parts chart, 1 part log */
+            gap: 25px;
+            align-items: start;
+        }
+
+        /* Card Styling */
+        .card {
+            background: rgba(31, 40, 51, 0.6);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            transition: transform 0.2s ease;
+        }
+
+        /* Left Panel (Chart) */
+        #left {
+            position: relative;
+            min-height: 400px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        canvas {
+            width: 100% !important;
+            height: 100% !important;
+            max-height: 400px;
+        }
+
+        /* Right Panel (Anomaly Log) */
+        #right {
+            display: flex;
+            flex-direction: column;
+            height: 440px; /* Match approximate height of chart area */
+            border-top: 4px solid var(--primary-color); /* Top accent only */
+            overflow: hidden;
+        }
+
+        #right h3 {
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+            color: var(--text-light);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        #right h3::after {
+            content: 'LIVE';
+            font-size: 0.7rem;
+            background: var(--primary-dim);
+            color: var(--primary-color);
+            padding: 2px 8px;
+            border-radius: 4px;
+            border: 1px solid var(--primary-color);
+        }
+
+        #anomalyList {
+            overflow-y: auto;
+            flex-grow: 1;
+            padding-right: 5px;
+        }
+
+        /* Anomaly Items */
+        .anomaly-item {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            background: rgba(255, 255, 255, 0.03);
+            margin-bottom: 8px;
+            padding: 12px;
+            border-radius: 6px;
+            border-left: 3px solid var(--danger-color);
+            color: #ffcccc;
+            transition: background 0.2s;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .anomaly-item:hover {
+            background: rgba(255, 75, 75, 0.1);
+        }
+
+        .timestamp {
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #444;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--primary-color);
+        }
+
+        /* Pulse Animation for Status Dot */
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(88, 255, 11, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(88, 255, 11, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(88, 255, 11, 0); }
+        }
+
+        /* Mobile Responsiveness */
+        @media (max-width: 900px) {
+            #container {
+                grid-template-columns: 1fr;
+            }
+            #right {
+                max-height: 300px;
+            }
+        }
+    </style>
 <body>
     <section>
         <h1>DIDAS - Dashboard Trafik Jaringan</h1>
