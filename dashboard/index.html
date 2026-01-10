@@ -219,84 +219,157 @@
   <!-- Socket.IO client dari server kita -->
   <script src="http://localhost:3000/socket.io/socket.io.js"></script>
 
-  <script>
-    const socket =io("http://localhost:3000");
+   <script>
+        const socket = io("http://localhost:3000");
 
+        // --- 1. KONFIGURASI TAMPILAN GRAFIK PREMIUM ---
+        const ctx = document.getElementById("trafficChart").getContext('2d');
 
-    const ctx = document.getElementById("trafficChart").getContext('2d');
-     const labels = [];      // label sumbu-X (waktu)
-    const dataPoints = []; 
+        // Membuat Efek Gradient (Fade dari Hijau ke Transparan)
+        let gradient = ctx.createLinearGradient(0, 0, 0, 400);
+        gradient.addColorStop(0, 'rgba(88, 255, 11, 0.5)'); // Warna atas (terang)
+        gradient.addColorStop(1, 'rgba(88, 255, 11, 0.0)'); // Warna bawah (transparan)
 
+        // Konfigurasi Data Awal
+        const labels = [];
+        const dataPoints = [];
 
-    const trafficChart = new Chart(ctx, {
-      type: "line",
-      data: {
-        labels: labels,
-        datasets: [{
-          label: "Packet Rate",
-          data: dataPoints,
-          borderWidth: 1,
-          fill: false,
-        }]
-      },
-      options: {
-        responsive: true,
-        animation: false,
-        scales: {
-          x: {
-            title: {
-              display: true,
-              text: "Waktu"
-            }
-          },
-          y: {
-            title: {
-              display: true,
-              text: "Packet Rate"
+        const trafficChart = new Chart(ctx, {
+            type: "line",
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: "Packet Rate (pps)",
+                    data: dataPoints,
+                    borderColor: '#58ff0b',       // Warna Garis Neon
+                    backgroundColor: gradient,    // Isi Gradient di bawah garis
+                    borderWidth: 2,
+                    pointBackgroundColor: '#0b0c10', // Warna titik tengah
+                    pointBorderColor: '#58ff0b',     // Warna pinggir titik
+                    pointBorderWidth: 2,
+                    pointRadius: 3,               // Ukuran titik default
+                    pointHoverRadius: 6,          // Ukuran titik saat di-hover
+                    fill: true,                   // Aktifkan area fill
+                    tension: 0.4                  // Kelengkungan garis (0 = kaku, 1 = sangat lengkung)
+                }]
             },
-            beginAtZero: true
-          }
-        }
-      }
-    });
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,       // Agar grafik mengikuti ukuran container parent
+                animation: false,                 // Matikan animasi saat update data agar performa tinggi
+                interaction: {
+                    mode: 'index',
+                    intersect: false,
+                },
+                plugins: {
+                    legend: {
+                        display: true,
+                        labels: {
+                            color: '#e0e0e0',
+                            font: { family: 'Inter', size: 12 }
+                        }
+                    },
+                    tooltip: {
+                        // Styling Tooltip agar seperti HUD
+                        backgroundColor: 'rgba(20, 25, 30, 0.9)',
+                        titleColor: '#58ff0b',
+                        bodyColor: '#e0e0e0',
+                        borderColor: 'rgba(88, 255, 11, 0.3)',
+                        borderWidth: 1,
+                        titleFont: { family: 'JetBrains Mono' },
+                        bodyFont: { family: 'JetBrains Mono' },
+                        padding: 10,
+                        displayColors: false,
+                        callbacks: {
+                            label: function(context) {
+                                return `Value: ${context.parsed.y} pps`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.05)', // Garis grid tipis transparan
+                            borderColor: 'transparent'          // Hilangkan garis border sumbu
+                        },
+                        ticks: {
+                            color: '#a0a0a0',
+                            font: { family: 'JetBrains Mono', size: 10 },
+                            maxTicksLimit: 8
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.05)',
+                            borderDash: [5, 5],                 // Garis putus-putus estetik
+                            borderColor: 'transparent'
+                        },
+                        ticks: {
+                            color: '#a0a0a0',
+                            font: { family: 'JetBrains Mono', size: 10 }
+                        }
+                    }
+                }
+            }
+        });
 
+        // --- 2. LOGIKA SOCKET IO ---
 
-    socket.on("log-broadcast", (data) => {
-      // data: { nodeId, packetRate, timestamp }
+        socket.on("log-broadcast", (data) => {
+            // Format waktu menjadi lebih ringkas (Jam:Menit:Detik)
+            const dateObj = new Date(data.timestamp);
+            const timeLabel = dateObj.toLocaleTimeString('id-ID', { hour12: false });
 
-      const timeLabel = new Date(data.timestamp).toLocaleTimeString();
+            labels.push(timeLabel);
+            dataPoints.push(data.packetRate);
 
-      labels.push(timeLabel);
-      dataPoints.push(data.packetRate);
+            // Menjaga grafik agar tidak terlalu padat (Max 30 titik)
+            if (labels.length > 30) {
+                labels.shift();
+                dataPoints.shift();
+            }
 
-      // batasi jumlah titik agar grafik tidak terlalu penuh
-      if (labels.length > 50) {
-        labels.shift();
-        dataPoints.shift();
-      }
+            trafficChart.update();
+        });
 
-      trafficChart.update();
-    });
+        socket.on("anomaly", (info) => {
+            const list = document.getElementById("anomalyList");
+            const item = document.createElement("div");
+            item.className = "anomaly-item";
 
-  socket.on("anomaly", (info) => {
-  const list = document.getElementById("anomalyList");
-  const item = document.createElement("div");
-  item.className = "anomaly-item";
+            // Efek Flash Merah pada grafik saat anomali
+            const originalColor = trafficChart.data.datasets[0].borderColor;
+            trafficChart.data.datasets[0].borderColor = '#ff4b4b';
+            trafficChart.update();
+            setTimeout(() => {
+                trafficChart.data.datasets[0].borderColor = originalColor;
+                trafficChart.update();
+            }, 1000);
 
-  const timeLabel = new Date(info.timestamp).toLocaleTimeString();
+            const timeLabel = new Date(info.timestamp).toLocaleTimeString('id-ID');
 
-  item.innerHTML = `
-    <b>Waktu:</b> ${timeLabel}<br>
-    <b>Node:</b> ${info.nodeId}<br>
-    <b>PacketRate:</b> ${info.packetRate}<br>
-    <b>Mean:</b> ${info.mean.toFixed(2)}, <b>STD:</b> ${info.std.toFixed(2)}<br>
-    <b>Z-score:</b> ${info.z.toFixed(2)}
-  `;
+            // HTML Log Anomali yang rapi
+            item.innerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+                    <span style="font-weight:bold; color:#ff4b4b;">⚠ ANOMALY DETECTED</span>
+                    <span class="timestamp">${timeLabel}</span>
+                </div>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:5px; font-size:0.8em; color:#ccc;">
+                    <div>Node ID: <b style="color:#fff">${info.nodeId}</b></div>
+                    <div>Rate: <b style="color:#fff">${info.packetRate}</b></div>
+                    <div>Z-Score: <b style="color:#ffcccc">${info.z.toFixed(2)}</b></div>
+                    <div>Limit: ${info.mean.toFixed(0)} ± ${info.std.toFixed(0)}</div>
+                </div>
+            `;
 
-  list.prepend(item);
-});
+            list.prepend(item);
+            
+            // Hapus log lama jika menumpuk
+            if (list.children.length > 20) list.removeChild(list.lastChild);
+        });
 
-
-  </script>
+    </script>
 </body>
 </html>
