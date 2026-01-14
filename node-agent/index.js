@@ -23,4 +23,4 @@ setInterval(() => {
   const data = buatDataTrafik();
   socket.emit("log", data); // kirim event bernama "log" ke server
   console.log("Mengirim log:", data);
-}, 1000);
+}, 2000);
