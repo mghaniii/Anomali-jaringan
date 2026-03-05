@@ -213,7 +213,20 @@
     </div>
   </div>
     </section>
-
+<template id="anomalyTemplate">
+    <div class="anomaly-item">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+            <span style="font-weight:bold; color:#ff4b4b;">⚠ ANOMALY DETECTED</span>
+            <span class="timestamp"></span>
+        </div>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:5px; font-size:0.8em; color:#ccc;">
+            <div>Node ID: <b class="node-id" style="color:#fff"></b></div>
+            <div>Rate: <b class="rate" style="color:#fff"></b></div>
+            <div>Z-Score: <b class="z-score" style="color:#ffcccc"></b></div>
+            <div>Limit: <span class="limit"></span></div>
+        </div>
+    </div>
+</template>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <!-- Socket.IO client dari server kita -->
@@ -370,6 +383,20 @@
             if (list.children.length > 20) list.removeChild(list.lastChild);
         });
 
+        socket.on("anomaly", (info) => {
+    const template = document.getElementById("anomalyTemplate");
+    const clone = template.content.cloneNode(true);
+
+    // Isi datanya
+    clone.querySelector(".timestamp").textContent = new Date(info.timestamp).toLocaleTimeString('id-ID');
+    clone.querySelector(".node-id").textContent = info.nodeId;
+    clone.querySelector(".rate").textContent = info.packetRate;
+    clone.querySelector(".z-score").textContent = info.z.toFixed(2);
+    clone.querySelector(".limit").textContent = `${info.mean.toFixed(0)} ± ${info.std.toFixed(0)}`;
+
+    document.getElementById("anomalyList").prepend(clone);
+});
+                
     </script>
 </body>
 </html>
