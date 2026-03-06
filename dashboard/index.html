@@ -348,54 +348,50 @@
         });
 
         socket.on("anomaly", (info) => {
-            const list = document.getElementById("anomalyList");
-            const item = document.createElement("div");
-            item.className = "anomaly-item";
+ 
+    const { nodeId, packetRate, z, timestamp, mean, std } = info;
+    const list = document.getElementById("anomalyList");
+    
+    // 2. Buat container utama
+    const item = document.createElement("div");
+    item.className = "anomaly-item";
 
-            // Efek Flash Merah pada grafik saat anomali
-            const originalColor = trafficChart.data.datasets[0].borderColor;
-            trafficChart.data.datasets[0].borderColor = '#ff4b4b';
-            trafficChart.update();
-            setTimeout(() => {
-                trafficChart.data.datasets[0].borderColor = originalColor;
-                trafficChart.update();
-            }, 1000);
+  
+    item.innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+            <span style="font-weight:bold; color:#ff4b4b;">⚠ ANOMALY DETECTED</span>
+            <span class="timestamp"></span>
+        </div>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:5px; font-size:0.8em; color:#ccc;">
+            <div>Node ID: <b class="val-node" style="color:#fff"></b></div>
+            <div>Rate: <b class="val-rate" style="color:#fff"></b></div>
+            <div>Z-Score: <b class="val-z" style="color:#ffcccc"></b></div>
+            <div>Limit: <span class="val-limit"></span></div>
+        </div>
+    `;
 
-            const timeLabel = new Date(info.timestamp).toLocaleTimeString('id-ID');
 
-            // HTML Log Anomali yang rapi
-            item.innerHTML = `
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
-                    <span style="font-weight:bold; color:#ff4b4b;">⚠ ANOMALY DETECTED</span>
-                    <span class="timestamp">${timeLabel}</span>
-                </div>
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:5px; font-size:0.8em; color:#ccc;">
-                    <div>Node ID: <b style="color:#fff">${info.nodeId}</b></div>
-                    <div>Rate: <b style="color:#fff">${info.packetRate}</b></div>
-                    <div>Z-Score: <b style="color:#ffcccc">${info.z.toFixed(2)}</b></div>
-                    <div>Limit: ${info.mean.toFixed(0)} ± ${info.std.toFixed(0)}</div>
-                </div>
-            `;
+    item.querySelector(".timestamp").textContent = new Date(timestamp).toLocaleTimeString('id-ID');
+    item.querySelector(".val-node").textContent = nodeId;
+    item.querySelector(".val-rate").textContent = packetRate;
+    item.querySelector(".val-z").textContent = z.toFixed(2);
+    item.querySelector(".val-limit").textContent = `${mean.toFixed(0)} ± ${std.toFixed(0)}`;
 
-            list.prepend(item);
-            
-            // Hapus log lama jika menumpuk
-            if (list.children.length > 20) list.removeChild(list.lastChild);
-        });
+    list.prepend(item);
 
-        socket.on("anomaly", (info) => {
-    const template = document.getElementById("anomalyTemplate");
-    const clone = template.content.cloneNode(true);
 
-    // Isi datanya
-    clone.querySelector(".timestamp").textContent = new Date(info.timestamp).toLocaleTimeString('id-ID');
-    clone.querySelector(".node-id").textContent = info.nodeId;
-    clone.querySelector(".rate").textContent = info.packetRate;
-    clone.querySelector(".z-score").textContent = info.z.toFixed(2);
-    clone.querySelector(".limit").textContent = `${info.mean.toFixed(0)} ± ${info.std.toFixed(0)}`;
+    const originalColor = trafficChart.data.datasets[0].borderColor;
+    trafficChart.data.datasets[0].borderColor = '#ff4b4b';
+    trafficChart.update();
+    setTimeout(() => {
+        trafficChart.data.datasets[0].borderColor = originalColor;
+        trafficChart.update();
+    }, 1000);
 
-    document.getElementById("anomalyList").prepend(clone);
+    if (list.children.length > 20) list.removeChild(list.lastChild);
 });
+
+        
                 
     </script>
 </body>

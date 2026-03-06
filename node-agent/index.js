@@ -22,7 +22,7 @@ function buatDataTrafik() {
 
   // jika tidak anomali, kirim data normal
   return { nodeId, packetRate, timestamp };
-}
+} 
 
 
 // 4. Setiap 1 detik, kirim data ke server
