@@ -6,26 +6,22 @@ const socket = io("http://localhost:3000");
 
 // 3. Fungsi untuk membuat data "trafik jaringan" palsu (simulasi)
 function buatDataTrafik() {
-  const packetRate = Math.floor(Math.random() * 200); 
-  const timestamp = Date.now(); 
-  const nodeId = "Node-1";  // pastikan ini dideklarasikan dulu
+  const nodeId = "Node-1"; 
+  const timestamp = Date.now();
+  const packetRateBase = Math.floor(Math.random() * 200); 
 
-  // simulasikan lonjakan besar tiap 10 detik
-  const now = Date.now();
-  if (Math.floor(now / 10000) % 2 === 0) {
-    // setiap 10 detik sekali
-    if (Math.random() < 0.3) {
-      // 30% kemungkinan
-      return { nodeId, packetRate: packetRate + 300, timestamp }; // bikin lonjakan besar
-    }
+
+  const isTimeForAnomaly = Math.floor(timestamp / 10000) % 2 === 0;
+  
+  if (isTimeForAnomaly && Math.random() < 0.3) {
+  
+    return { nodeId, packetRate: packetRateBase + 1200, timestamp }; 
   }
 
-  // jika tidak anomali, kirim data normal
-  return { nodeId, packetRate, timestamp };
-} 
+  return { nodeId, packetRate: packetRateBase, timestamp };
+}
 
 
-// 4. Setiap 1 detik, kirim data ke server
 setInterval(() => {
   const data = buatDataTrafik();
   socket.emit("log", data); // kirim event bernama "log" ke server
